@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom-v5-compat';
-import { CommonActionFactory } from '@console/app/src/actions/creators/common-factory';
+import { CommonActionCreator } from '@console/app/src/actions/hooks/types';
+import { useCommonAction } from '@console/app/src/actions/hooks/useCommonAction';
+import { useCommonActions } from '@console/app/src/actions/hooks/useCommonActions';
 import { Action } from '@console/dynamic-plugin-sdk/src/extensions/actions';
 import { errorModal } from '@console/internal/components/modals';
 import { resourceObjPath } from '@console/internal/components/utils';
@@ -15,8 +17,17 @@ const useBuildActions = (build: Build) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [kindObj, inFlight] = useK8sModel(referenceFor(build));
+  const [commonActions, isReady] = useCommonActions(kindObj, build, [
+    CommonActionCreator.ModifyLabels,
+    CommonActionCreator.ModifyAnnotations,
+  ] as const);
+  const deleteAction = useCommonAction(kindObj, build, CommonActionCreator.Delete);
 
   const actionsMenu = React.useMemo<Action[]>(() => {
+    if (!isReady) {
+      return [];
+    }
+
     const actions: Action[] = [];
     actions.push({
       id: 'shipwright-build-start',
@@ -61,12 +72,7 @@ const useBuildActions = (build: Build) => {
         },
       });
     }
-    actions.push(
-      ...[
-        CommonActionFactory.ModifyLabels(kindObj, build),
-        CommonActionFactory.ModifyAnnotations(kindObj, build),
-      ],
-    );
+    actions.push(...Object.values(commonActions));
     actions.push({
       id: 'shipwright-build-edit',
       label: t('shipwright-plugin~Edit Build'),
@@ -80,9 +86,11 @@ const useBuildActions = (build: Build) => {
         namespace: build.metadata?.namespace,
       },
     });
-    actions.push(CommonActionFactory.Delete(kindObj, build));
+    if (deleteAction) {
+      actions.push(deleteAction);
+    }
     return actions;
-  }, [t, build, kindObj, navigate]);
+  }, [t, build, navigate, commonActions, deleteAction, isReady]);
 
   return [actionsMenu, !inFlight, undefined];
 };
