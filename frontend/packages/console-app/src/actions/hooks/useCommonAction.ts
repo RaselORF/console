@@ -14,21 +14,21 @@ import { useCommonActions } from './useCommonActions';
  *
  * This hook is robust to inline arguments, thanks to internal deep compare memoization.
  *
- * @returns {Action} The generated action.
+ * @returns {Action | undefined} The generated action when ready, undefined when not ready.
  *
  * @example
  * // Getting ModifyCount action
  * const MyResourceComponent = ({ kind, resource }) => {
  *   const modifyCountAction = useCommonAction(kind, resource, CommonActionCreator.ModifyCount);
- *   return <ActionButton action={modifyCountAction} />;
+ *   return modifyCountAction ? <ActionButton action={modifyCountAction} /> : null;
  * };
  */
 export const useCommonAction = (
-  kind: K8sModel,
-  resource: K8sResourceKind,
+  kind: K8sModel | undefined,
+  resource: K8sResourceKind | undefined,
   actionCreator: CommonActionCreator,
   message?: JSX.Element,
-): Action => {
-  const actions = useCommonActions(kind, resource, [actionCreator] as const, message);
-  return actions[actionCreator];
+): Action | undefined => {
+  const [actions, isReady] = useCommonActions(kind, resource, [actionCreator] as const, message);
+  return isReady ? actions[actionCreator] : undefined;
 };

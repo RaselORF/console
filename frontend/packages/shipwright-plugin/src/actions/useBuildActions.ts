@@ -17,13 +17,17 @@ const useBuildActions = (build: Build) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [kindObj, inFlight] = useK8sModel(referenceFor(build));
-  const commonActions = useCommonActions(kindObj, build, [
+  const [commonActions, isReady] = useCommonActions(kindObj, build, [
     CommonActionCreator.ModifyLabels,
     CommonActionCreator.ModifyAnnotations,
   ] as const);
   const deleteAction = useCommonAction(kindObj, build, CommonActionCreator.Delete);
 
   const actionsMenu = React.useMemo<Action[]>(() => {
+    if (!isReady) {
+      return [];
+    }
+
     const actions: Action[] = [];
     actions.push({
       id: 'shipwright-build-start',
@@ -82,9 +86,11 @@ const useBuildActions = (build: Build) => {
         namespace: build.metadata?.namespace,
       },
     });
-    actions.push(deleteAction);
+    if (deleteAction) {
+      actions.push(deleteAction);
+    }
     return actions;
-  }, [t, build, navigate, commonActions, deleteAction]);
+  }, [t, build, navigate, commonActions, deleteAction, isReady]);
 
   return [actionsMenu, !inFlight, undefined];
 };

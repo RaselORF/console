@@ -16,7 +16,7 @@ export const useDaemonSetActionsProvider = (resource: K8sResourceKind) => {
     () => [
       getHealthChecksAction(kindObj, resource),
       ...pdbActions,
-      addStorageAction,
+      ...(addStorageAction ? [addStorageAction] : []),
       ...commonResourceActions,
     ],
     [kindObj, resource, pdbActions, addStorageAction, commonResourceActions],
