@@ -656,6 +656,9 @@ func main() {
 		klog.Fatal(httpsrv.ListenAndServeTLS(*fTlSCertFile, *fTlSKeyFile))
 	} else {
 		klog.Info("not using TLS")
+		// OpenRefactory Warning:
+		// No read or write timeout is set to server config
+		// which may cause server to wait indefinitely.
 		klog.Fatal(httpsrv.ListenAndServe())
 	}
 }
