@@ -33,7 +33,7 @@ func (c *CSRFVerifier) SetCSRFCookie(path string, w http.ResponseWriter) {
 		Name:  CSRFCookieName,
 		Value: sessions.RandomString(64),
 		// JS needs to read this Cookie
-		HttpOnly: false,
+		HttpOnly: true,
 		Path:     path,
 		Secure:   c.secureCookies,
 		SameSite: http.SameSiteStrictMode,
